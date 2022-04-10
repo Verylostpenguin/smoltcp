@@ -2,9 +2,9 @@
 use libfuzzer_sys::fuzz_target;
 use smoltcp::iface::{InterfaceBuilder, NeighborCache};
 use smoltcp::phy::{Loopback, Medium};
-use smoltcp::socket::{SocketSet, TcpSocket, TcpSocketBuffer};
+use smoltcp::socket::{TcpSocket, TcpSocketBuffer};
 use smoltcp::time::{Duration, Instant};
-use smoltcp::wire::{EthernetAddress, EthernetFrame, EthernetProtocol};
+use smoltcp::wire::{EthernetFrame, EthernetProtocol};
 use smoltcp::wire::{IpAddress, IpCidr, Ipv4Packet, Ipv6Packet, TcpPacket};
 use std::cmp;
 
@@ -132,8 +132,7 @@ fuzz_target!(|data: &[u8]| {
     let neighbor_cache = NeighborCache::new(&mut neighbor_cache_entries[..]);
 
     let ip_addrs = [IpCidr::new(IpAddress::v4(127, 0, 0, 1), 8)];
-    let mut iface = InterfaceBuilder::new(device)
-        .ethernet_addr(EthernetAddress::default())
+    let mut iface = InterfaceBuilder::new(device, vec![])
         .neighbor_cache(neighbor_cache)
         .ip_addrs(ip_addrs)
         .finalize();
@@ -158,19 +157,17 @@ fuzz_target!(|data: &[u8]| {
         TcpSocket::new(tcp_rx_buffer, tcp_tx_buffer)
     };
 
-    let mut socket_set_entries: [_; 2] = Default::default();
-    let mut socket_set = SocketSet::new(&mut socket_set_entries[..]);
-    let server_handle = socket_set.add(server_socket);
-    let client_handle = socket_set.add(client_socket);
+    let server_handle = iface.add_socket(server_socket);
+    let client_handle = iface.add_socket(client_socket);
 
     let mut did_listen = false;
     let mut did_connect = false;
     let mut done = false;
     while !done && clock.elapsed() < Instant::from_millis(4_000) {
-        let _ = iface.poll(&mut socket_set, clock.elapsed());
+        let _ = iface.poll(clock.elapsed());
 
         {
-            let mut socket = socket_set.get::<TcpSocket>(server_handle);
+            let (socket, _) = iface.get_socket_and_context::<TcpSocket>(server_handle);
             if !socket.is_active() && !socket.is_listening() {
                 if !did_listen {
                     socket.listen(1234).unwrap();
@@ -185,11 +182,12 @@ fuzz_target!(|data: &[u8]| {
         }
 
         {
-            let mut socket = socket_set.get::<TcpSocket>(client_handle);
+            let (socket, cx) = iface.get_socket_and_context::<TcpSocket>(client_handle);
             if !socket.is_open() {
                 if !did_connect {
                     socket
                         .connect(
+                            cx,
                             (IpAddress::v4(127, 0, 0, 1), 1234),
                             (IpAddress::Unspecified, 65000),
                         )
@@ -206,7 +204,7 @@ fuzz_target!(|data: &[u8]| {
             }
         }
 
-        match iface.poll_delay(&socket_set, clock.elapsed()) {
+        match iface.poll_delay(clock.elapsed()) {
             Some(Duration::ZERO) => {}
             Some(delay) => clock.advance(delay),
             None => clock.advance(Duration::from_millis(1)),
