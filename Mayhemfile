@@ -8,4 +8,3 @@ cmds:
   - cmd: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/packet_parser /smoltcp/fuzz/corpus/packet_parser
   - cmd: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/sixlowpan_iphc_header
   - cmd: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/sixlowpan_udp_header
-  - cmd: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/tcp_headers
