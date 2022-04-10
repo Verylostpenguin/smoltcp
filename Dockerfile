@@ -4,7 +4,7 @@ ADD . /smoltcp
 WORKDIR /smoltcp
 RUN rustup toolchain install nightly
 WORKDIR /smoltcp/fuzz
-RUN cargo +nightly fuzz build
+RUN RUSTFLAGS="-Znew-llvm-pass-manager=no" cargo +nightly fuzz build
 
 # Set to fuzz!
 ENTRYPOINT []
