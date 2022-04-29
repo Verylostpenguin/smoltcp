@@ -7,6 +7,11 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  DHCP_HEADER_MAYHEMFILE: dhcp_header.mayhemfile
+  IEEE802154_MAYHEMFILE: ieee802154.mayhemfile
+  PACKET_PARSER_MAYHEMFILE: packet_parser.mayhemfile
+  SIXLOWPAN_IPHC_HEADER_MAYHEMFILE: sixlowpan_iphc_header.mayhemfile
+  SIXLOWPAN_UDP_HEADER_MAYHEMFILE: sixlowpan_udp_header.mayhemfile
 
 jobs:
   build:
@@ -44,12 +49,45 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Start analysis
+          
+      - name: Start analysis for dhcp_header
         uses: ForAllSecure/mcode-action@v1
         with:
           mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
-          args: --image ${{ steps.meta.outputs.tags }}
+          args: --image ${{ steps.meta.outputs.tags }} 
+                --file ${{ env.DHCP_HEADER_MAYHEMFILE }}
+          sarif-output: sarif
+
+      - name: Start analysis for ieee802154
+        uses: ForAllSecure/mcode-action@v1
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --image ${{ steps.meta.outputs.tags }} 
+                --file ${{ env.IEEE802154_MAYHEMFILE }}
+          sarif-output: sarif
+
+      - name: Start analysis for packet_parser
+        uses: ForAllSecure/mcode-action@v1
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --image ${{ steps.meta.outputs.tags }} 
+                --file ${{ env.PACKET_PARSER_MAYHEMFILE }}
+          sarif-output: sarif
+
+      - name: Start analysis for sixlowpan_iphc_header
+        uses: ForAllSecure/mcode-action@v1
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --image ${{ steps.meta.outputs.tags }} 
+                --file ${{ env.SIXLOWPAN_IPHC_HEADER_MAYHEMFILE }}
+          sarif-output: sarif
+
+      - name: Start analysis for sixlowpan_udp_header
+        uses: ForAllSecure/mcode-action@v1
+        with:
+          mayhem-token: ${{ secrets.MAYHEM_TOKEN }}
+          args: --image ${{ steps.meta.outputs.tags }} 
+                --file ${{ env.SIXLOWPAN_UDP_HEADER_MAYHEMFILE }}
           sarif-output: sarif
 
       - name: Upload SARIF file(s)

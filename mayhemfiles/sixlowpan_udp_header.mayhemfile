@@ -1,0 +1,5 @@
+project: smoltcp
+target: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/sixlowpan_udp_header
+
+cmds:
+  - cmd: /smoltcp/fuzz/target/x86_64-unknown-linux-gnu/release/sixlowpan_udp_header
